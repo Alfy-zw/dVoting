@@ -13,6 +13,31 @@ import "./Registration.css";
 import getWeb3 from "../../getWeb3";
 import Election from "../../contracts/Election.json";
 
+function validateDOB() {
+  // Get the entered date of birth
+  var dobInput = document.getElementById("dob");
+  var dobValue = dobInput.value;
+
+  // Create a Date object from the input value
+  var dobDate = new Date(dobValue);
+
+  // Get the current date
+  var currentDate = new Date();
+
+  // Calculate the age
+  var age = currentDate.getFullYear() - dobDate.getFullYear();
+
+  // Check if the age is less than 18
+  if (age < 18) {
+    // Display an error message or take appropriate action
+    alert("Age must be 18 or older.");
+    dobInput.setCustomValidity("Age must be 18 or older.");
+  } else {
+    // Reset the custom validity
+    dobInput.setCustomValidity("");
+  }
+}
+
 export default class Registration extends Component {
   constructor(props) {
     super(props);
@@ -26,11 +51,17 @@ export default class Registration extends Component {
       voterCount: undefined,
       voterName: "",
       voterPhone: "",
+      voterEmail: "",
+      voterIdNumber: "",
+      voterDob: "",
       voters: [],
       currentVoter: {
         address: undefined,
         name: null,
         phone: null,
+        voterEmail: null,
+      voterIdNumber: null,
+      voterDob: null,
         hasVoted: false,
         isVerified: false,
         isRegistered: false,
@@ -53,6 +84,7 @@ export default class Registration extends Component {
 
       // Get the contract instance.
       const networkId = await web3.eth.net.getId();
+      console.log(networkId);
       const deployedNetwork = Election.networks[networkId];
       const instance = new web3.eth.Contract(
         Election.abi,
@@ -132,9 +164,19 @@ export default class Registration extends Component {
   updateVoterPhone = (event) => {
     this.setState({ voterPhone: event.target.value });
   };
+  updateVoterEmail = (event) => {
+    this.setState({ voterEmail: event.target.value });
+  };
+  updateVoterIdNumber = (event) => {
+    this.setState({ voterIdNumber: event.target.value });
+  };
+  updateVoterDob = (event) => {
+    this.setState({ voterDob: event.target.value });
+  };
+
   registerAsVoter = async () => {
     await this.state.ElectionInstance.methods
-      .registerAsVoter(this.state.voterName, this.state.voterPhone)
+      .registerAsVoter(this.state.voterName, this.state.voterPhone,this.state.voterEmail,this.state.voterDob,this.state.voterIdNumber)
       .send({ from: this.state.account, gas: 1000000 });
     window.location.reload();
   };
@@ -180,6 +222,8 @@ export default class Registration extends Component {
                         className={"input-r"}
                         type="text"
                         placeholder="eg. Ava"
+                        pattern="^[a-zA-Z\s]+$"
+                        required
                         value={this.state.voterName}
                         onChange={this.updateVoterName}
                       />{" "}
@@ -190,13 +234,59 @@ export default class Registration extends Component {
                       Phone number <span style={{ color: "tomato" }}>*</span>
                       <input
                         className={"input-r"}
-                        type="number"
-                        placeholder="eg. 9841234567"
+                        type="text"
+                        placeholder="eg. 0779820899"
+                        pattern="^07\d{8}$"
+                        required
                         value={this.state.voterPhone}
                         onChange={this.updateVoterPhone}
                       />
                     </label>
                   </div>
+                  <div className="div-li">
+                    <label className={"label-r"}>
+                      Email
+                      <input
+                        className={"input-r"}
+                        type="email"
+                        required
+                        placeholder="eg. retro@byte.co.zw"
+                        value={this.state.voterEmail}
+                        onChange={this.updateVoterEmail}
+
+                      />{" "}
+                    </label>
+                  </div>
+                  <div className="div-li">
+                    <label className={"label-r"}>
+                      D.O.B
+                      <input
+                        className={"input-r"}
+                        type="date"
+                        pattern="\d{4}-\d{2}-\d{2}"
+                        onchange="validateDOB()"
+                        id="dob"
+                        required
+                        value={this.state.voterDob}
+                        onChange={this.updateVoterDob}
+                      />{" "}
+                    </label>
+                  </div>
+                  <div className="div-li">
+                    <label className={"label-r"}>
+                      National ID Number
+                      <input
+                        className={"input-r"}
+                        type="text"
+                        placeholder="eg. 60-0000000X44"
+                        pattern="^\d{2}-\d{6,11}[a-zA-Z]\d{2}$"
+                        required
+                        value={this.state.voterIdNumber}
+                        onChange={this.updateVoterIdNumber}
+                      />{" "}
+                    </label>
+                  </div>
+
                   <p className="note">
                     <span style={{ color: "tomato" }}> Note: </span>
                     <br /> Make sure your account address and Phone number are
@@ -207,7 +297,7 @@ export default class Registration extends Component {
                   <button
                     className="btn-add"
                     disabled={
-                      this.state.voterPhone.length !== 10 ||
+                      // this.state.voterPhone.length !== 10 ||
                       this.state.currentVoter.isVerified
                     }
                     onClick={this.registerAsVoter}
