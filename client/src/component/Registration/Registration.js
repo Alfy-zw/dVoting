@@ -13,31 +13,6 @@ import "./Registration.css";
 import getWeb3 from "../../getWeb3";
 import Election from "../../contracts/Election.json";
 
-function validateDOB() {
-  // Get the entered date of birth
-  var dobInput = document.getElementById("dob");
-  var dobValue = dobInput.value;
-
-  // Create a Date object from the input value
-  var dobDate = new Date(dobValue);
-
-  // Get the current date
-  var currentDate = new Date();
-
-  // Calculate the age
-  var age = currentDate.getFullYear() - dobDate.getFullYear();
-
-  // Check if the age is less than 18
-  if (age < 18) {
-    // Display an error message or take appropriate action
-    alert("Age must be 18 or older.");
-    dobInput.setCustomValidity("Age must be 18 or older.");
-  } else {
-    // Reset the custom validity
-    dobInput.setCustomValidity("");
-  }
-}
-
 export default class Registration extends Component {
   constructor(props) {
     super(props);
@@ -60,8 +35,8 @@ export default class Registration extends Component {
         name: null,
         phone: null,
         voterEmail: null,
-      voterIdNumber: null,
-      voterDob: null,
+        voterIdNumber: null,
+        voterDob: null,
         hasVoted: false,
         isVerified: false,
         isRegistered: false,
@@ -84,7 +59,6 @@ export default class Registration extends Component {
 
       // Get the contract instance.
       const networkId = await web3.eth.net.getId();
-      console.log(networkId);
       const deployedNetwork = Election.networks[networkId];
       const instance = new web3.eth.Contract(
         Election.abi,
@@ -152,7 +126,7 @@ export default class Registration extends Component {
       });
     } catch (error) {
       // Catch any errors for any of the above operations.
-      console.error(error);
+      //console.error(error);
       alert(
         `Failed to load web3, accounts, or contract. Check console for details (f12).`
       );
@@ -176,7 +150,13 @@ export default class Registration extends Component {
 
   registerAsVoter = async () => {
     await this.state.ElectionInstance.methods
-      .registerAsVoter(this.state.voterName, this.state.voterPhone,this.state.voterEmail,this.state.voterDob,this.state.voterIdNumber)
+      .registerAsVoter(
+        this.state.voterName,
+        this.state.voterPhone,
+        this.state.voterEmail,
+        this.state.voterDob,
+        this.state.voterIdNumber
+      )
       .send({ from: this.state.account, gas: 1000000 });
     window.location.reload();
   };
@@ -203,7 +183,7 @@ export default class Registration extends Component {
               <h3>Registration</h3>
               <small>Register to vote.</small>
               <div className="container-item">
-                <form>
+                <form id="regForm">
                   <div className="div-li">
                     <label className={"label-r"}>
                       Account Address
@@ -253,7 +233,6 @@ export default class Registration extends Component {
                         placeholder="eg. retro@byte.co.zw"
                         value={this.state.voterEmail}
                         onChange={this.updateVoterEmail}
-
                       />{" "}
                     </label>
                   </div>
@@ -300,7 +279,37 @@ export default class Registration extends Component {
                       // this.state.voterPhone.length !== 10 ||
                       this.state.currentVoter.isVerified
                     }
-                    onClick={this.registerAsVoter}
+                    onClick={() => {
+                      // Get the entered date of birth
+                      const dobInput = document.getElementById("dob");
+                      const dobValue = dobInput.value;
+                      // Create a Date object from the input value
+                      const dobDate = new Date(dobValue);
+                      // Get the current date
+                      const currentDate = new Date();
+                      // Calculate the age
+                      const age =
+                        currentDate.getFullYear() - dobDate.getFullYear();
+
+                      const form = document.getElementById("regForm");
+                      
+                    
+                      if (form.checkValidity() && age >= 18) {
+                        console.log("Form is valid. Registering as voter.");
+              
+                          dobInput.setCustomValidity("");
+                        this.registerAsVoter();
+                      } else {
+                        if (age<18) {
+                          dobInput.setCustomValidity("Age must be 18 or older.");
+                        }
+                        alert(
+                          "Please fill in all required fields with valid data."
+                        );
+                      }
+
+          
+                    }}
                   >
                     {this.state.currentVoter.isRegistered
                       ? "Update"
